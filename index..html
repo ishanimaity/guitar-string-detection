@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guitar String Detection Prototype</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Guitar String Detection Prototype</h1>
+        <p>Upload an audio file containing a single guitar string sound:</p>
+        <form id="upload-form" enctype="multipart/form-data">
+            <input type="file" id="audio-file" accept="audio/*" required>
+            <button type="submit">Upload</button>
+        </form>
+        <div id="result">
+            <!-- Result will be displayed here -->
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('upload-form').addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const audioFile = document.getElementById('audio-file').files[0];
+
+            if (!audioFile) {
+                alert('Please select an audio file.');
+                return;
+            }
+
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const reader = new FileReader();
+
+            reader.onload = async function (e) {
+                try {
+                    const buffer = await audioContext.decodeAudioData(e.target.result);
+                    const frequencies = getFrequencies(buffer);
+                    const detectedString = detectGuitarString(frequencies);
+
+                    document.getElementById('result').textContent = `Detected String: ${detectedString}`;
+                } catch (err) {
+                    console.error(err);
+                    alert('An error occurred while processing the audio file.');
+                }
+            };
+
+            reader.readAsArrayBuffer(audioFile);
+        });
+
+        function getFrequencies(audioBuffer) {
+            const sampleRate = audioBuffer.sampleRate;
+            const bufferLength = audioBuffer.length;
+            const audioData = audioBuffer.getChannelData(0);
+
+            const frequencies = [];
+
+            for (let i = 0; i < bufferLength; i++) {
+                const time = i / sampleRate;
+                const frequency = audioData[i] * sampleRate;
+                frequencies.push({ time, frequency });
+            }
+
+            return frequencies;
+        }
+
+        function detectGuitarString(frequencies) {
+            // Add your string detection logic here
+            // You can analyze frequencies to determine the played string
+            // For simplicity, we'll just return a random string for now
+            const stringOptions = ['E', 'A', 'D', 'G', 'B', 'e'];
+            const randomIndex = Math.floor(Math.random() * stringOptions.length);
+            return stringOptions[randomIndex];
+        }
+    </script>
+</body>
+</html>
